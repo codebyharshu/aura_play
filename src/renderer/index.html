@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:;">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SyncWave - Real-Time Audio Synchronization</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Custom Draggable Title Bar / Header -->
+    <header class="titlebar">
+      <div class="logo-group">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 10v4"/>
+            <path d="M6 7v10"/>
+            <path d="M10 3v18"/>
+            <path d="M14 6v12"/>
+            <path d="M18 9v6"/>
+            <path d="M22 11v2"/>
+          </svg>
+        </div>
+        <div class="logo-text">
+          <span class="logo-name">SyncWave</span>
+          <span class="logo-badge">PRO</span>
+        </div>
+      </div>
+
+      <div class="header-center">
+        <div class="status-pill idle" id="broadcastStatusPill">
+          <span class="status-dot"></span>
+          <span class="status-text" id="broadcastStatusText">Idle (Server Stopped)</span>
+        </div>
+        <div class="network-badge" id="networkBadge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+            <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+            <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+            <line x1="12" y1="20" x2="12.01" y2="20"/>
+          </svg>
+          <span id="headerIPText">Local Network</span>
+        </div>
+      </div>
+
+      <div class="window-controls">
+        <button class="win-btn" id="minBtn" title="Minimize">
+          <svg viewBox="0 0 12 12"><line x1="1" y1="6" x2="11" y2="6"/></svg>
+        </button>
+        <button class="win-btn" id="maxBtn" title="Maximize">
+          <svg viewBox="0 0 12 12"><rect x="2" y="2" width="8" height="8" rx="1"/></svg>
+        </button>
+        <button class="win-btn win-close" id="closeBtn" title="Close">
+          <svg viewBox="0 0 12 12"><line x1="2" y1="2" x2="10" y2="10"/><line x1="10" y1="2" x2="2" y2="10"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Dashboard Grid Layout -->
+    <main class="dashboard-grid">
+      <!-- Left Column: Audio Controls & Visualizer -->
+      <section class="grid-card main-audio-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2>Audio Broadcast Engine</h2>
+            <p class="card-subtitle">WASAPI Loopback Capture &bull; Ultra-Low Latency</p>
+          </div>
+          <div class="audio-capture-badge active" id="audioCaptureBadge">
+            <span class="pulse-ring"></span>
+            <span id="captureEngineName">WASAPI Loopback Ready</span>
+          </div>
+        </div>
+
+        <!-- Real-time Visualizer Canvas -->
+        <div class="visualizer-container">
+          <canvas id="visualizerCanvas" width="600" height="180"></canvas>
+          <div class="visualizer-overlay">
+            <div class="freq-tag">20 Hz</div>
+            <div class="freq-tag center">1 kHz</div>
+            <div class="freq-tag">20 kHz</div>
+          </div>
+        </div>
+
+        <!-- Primary Broadcast Action Buttons -->
+        <div class="audio-action-row">
+          <button class="action-btn btn-start" id="startSyncBtn">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="5 3 19 12 5 21 5 3"/>
+            </svg>
+            <span>Start Sync Broadcast</span>
+          </button>
+
+          <button class="action-btn btn-stop" id="stopSyncBtn" disabled>
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <rect x="6" y="6" width="12" height="12" rx="2"/>
+            </svg>
+            <span>Stop Broadcast</span>
+          </button>
+        </div>
+
+        <!-- Master Volume & Output Level Section -->
+        <div class="master-volume-section">
+          <div class="volume-header">
+            <span class="vol-label">Master Broadcast Volume</span>
+            <span class="vol-value" id="masterVolumeVal">100%</span>
+          </div>
+          <div class="volume-slider-row">
+            <button class="btn-mute" id="muteToggleBtn" title="Mute / Unmute">
+              <svg class="vol-icon" id="muteIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+              </svg>
+            </button>
+            <input type="range" class="custom-slider" id="masterVolumeSlider" min="0" max="100" value="100">
+            <div class="vu-meter">
+              <div class="vu-bar" id="vuBarLeft"></div>
+              <div class="vu-bar" id="vuBarRight"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Column: QR Connection Card -->
+      <section class="grid-card connection-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2>Device Connection</h2>
+            <p class="card-subtitle" id="connectionCardSubtitle">Connect phones, tablets & laptops locally</p>
+          </div>
+          <div class="header-action-group">
+            <span class="security-badge" id="securityBadge">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              <span id="securityBadgeText">Token Auth</span>
+            </span>
+            <button class="btn-config-icon" id="openSettingsBtn" title="Internet Mode & Signaling Settings">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Network Connection Mode Selector -->
+        <div class="network-mode-selector">
+          <button class="mode-tab-btn active" id="modeLocalBtn" data-mode="local">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+              <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+              <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+              <line x1="12" y1="20" x2="12.01" y2="20"/>
+            </svg>
+            <span>Local Network Mode</span>
+          </button>
+          <button class="mode-tab-btn" id="modeInternetBtn" data-mode="internet">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="2" y1="12" x2="22" y2="12"/>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+            <span>Internet Mode</span>
+            <span class="mode-pill-sub">WebRTC</span>
+          </button>
+        </div>
+
+        <!-- QR Code Display Area -->
+        <div class="qr-wrapper">
+          <div class="qr-box" id="qrContainer">
+            <div class="qr-placeholder" id="qrPlaceholder">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="3" y="3" width="7" height="7"/>
+                <rect x="14" y="3" width="7" height="7"/>
+                <rect x="3" y="14" width="7" height="7"/>
+                <rect x="14" y="14" width="7" height="7"/>
+              </svg>
+              <span id="qrPlaceholderText">Click "Start Sync" to generate QR code</span>
+            </div>
+            <img id="qrImage" class="qr-img hidden" alt="SyncWave Connection QR Code">
+          </div>
+        </div>
+
+        <!-- Connection URL & Copy Action -->
+        <div class="url-action-card">
+          <div class="url-box">
+            <span class="url-label" id="connectionUrlLabel">Connection URL:</span>
+            <input type="text" class="url-input" id="connectionUrlInput" readonly value="Start sync to view link">
+          </div>
+          <button class="btn-copy" id="copyUrlBtn" title="Copy URL">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+            <span id="copyBtnText">Copy</span>
+          </button>
+          <button class="btn-refresh" id="regenTokenBtn" title="Generate New QR & Revoke Old Access">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="23 4 23 10 17 10"/>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg>
+            <span>Rotate</span>
+          </button>
+        </div>
+
+        <!-- Security Transparency Banner -->
+        <div class="security-notice-pill" id="securityNoticePill">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="16" x2="12" y2="12"/>
+            <line x1="12" y1="8" x2="12.01" y2="8"/>
+          </svg>
+          <span id="securityNoticeText">Local Wi-Fi Network Transport &bull; Non-Cloud &bull; Host Approved</span>
+        </div>
+
+        <!-- Instructions -->
+        <div class="connection-instructions" id="connectionInstructions">
+          <div class="step-item">
+            <span class="step-num">1</span>
+            <span id="step1Text">Make sure receiver is on the <strong>same Wi-Fi</strong> network.</span>
+          </div>
+          <div class="step-item">
+            <span class="step-num">2</span>
+            <span id="step2Text">Scan QR code with iPhone Camera or Android Lens.</span>
+          </div>
+          <div class="step-item">
+            <span class="step-num">3</span>
+            <span id="step3Text">Tap <strong>"Join Stream"</strong> on the phone & approve here.</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Bottom Full-Width Section: Connected Devices & Synchronization Metrics -->
+      <section class="grid-card devices-and-sync-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2>Connected Receiver Devices</h2>
+            <p class="card-subtitle">Manage audio streaming & individual volumes</p>
+          </div>
+          <div class="sync-stats-summary">
+            <div class="metric-pill">
+              <span class="metric-label">Devices:</span>
+              <span class="metric-val" id="deviceCountVal">0</span>
+            </div>
+            <div class="metric-pill">
+              <span class="metric-label">Playout Buffer:</span>
+              <span class="metric-val" id="playoutBufferVal">80 ms</span>
+            </div>
+            <div class="metric-pill">
+              <span class="metric-label">Sync Precision:</span>
+              <span class="metric-val highlight" id="syncPrecisionVal">Sub-50ms NTP</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Device Cards List Container -->
+        <div class="device-list-container" id="deviceListContainer">
+          <div class="empty-devices-view" id="emptyDevicesView">
+            <div class="empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                <line x1="12" y1="18" x2="12.01" y2="18"/>
+              </svg>
+            </div>
+            <h3>No Devices Connected</h3>
+            <p>Start Sync and scan the QR code from another device to begin synchronized streaming.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Floating Connection Request Modal -->
+    <div class="approval-modal-backdrop hidden" id="approvalModalBackdrop">
+      <div class="approval-modal">
+        <div class="modal-icon-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="8.5" cy="7" r="4"/>
+            <line x1="20" y1="8" x2="20" y2="14"/>
+            <line x1="23" y1="11" x2="17" y2="11"/>
+          </svg>
+        </div>
+        <h3>Incoming Connection Request</h3>
+        <p class="modal-desc">A device is requesting permission to receive your audio stream:</p>
+
+        <div class="requested-device-info">
+          <div class="info-row">
+            <span class="info-key">Device:</span>
+            <strong class="info-val" id="reqDeviceName">iPhone 14 Pro</strong>
+          </div>
+          <div class="info-row">
+            <span class="info-key">IP Address:</span>
+            <span class="info-val monospace" id="reqDeviceIP">192.168.1.42</span>
+          </div>
+          <div class="info-row">
+            <span class="info-key">Device Type:</span>
+            <span class="info-val" id="reqDeviceType">iPhone</span>
+          </div>
+          <div class="info-row">
+            <span class="info-key">Network Mode:</span>
+            <span class="info-val highlight-mode" id="reqDeviceMode">Local Wi-Fi</span>
+          </div>
+        </div>
+
+        <div class="modal-action-row">
+          <button class="modal-btn btn-reject" id="rejectDeviceBtn">
+            <span>Reject</span>
+          </button>
+          <button class="modal-btn btn-approve" id="approveDeviceBtn">
+            <span>Approve & Stream</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Internet Mode Configuration Modal -->
+    <div class="approval-modal-backdrop hidden" id="internetSettingsModal">
+      <div class="approval-modal settings-modal">
+        <div class="modal-icon-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="2" y1="12" x2="22" y2="12"/>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+          </svg>
+        </div>
+        <h3>Internet Mode Configuration</h3>
+        <p class="modal-desc">Configure WebRTC signaling & NAT traversal endpoints:</p>
+
+        <div class="settings-inputs-wrapper">
+          <div class="input-group">
+            <label class="setting-label">Public Signaling Server URL (Optional):</label>
+            <input type="text" class="setting-input" id="cfgSignalingUrl" placeholder="e.g. https://your-signaling.onrender.com">
+            <span class="setting-help">Deploy standalone-signaling-server to Render or Railway for 24/7 dedicated public access.</span>
+          </div>
+          <div class="input-group">
+            <label class="setting-label">Custom TURN Relay URL (Optional):</label>
+            <input type="text" class="setting-input" id="cfgTurnUrl" placeholder="turn:turn.example.com:3478">
+            <span class="setting-help">Built-in OpenRelay is used by default for symmetric NAT traversal across Jio/Airtel 5G.</span>
+          </div>
+        </div>
+
+        <div class="modal-action-row">
+          <button class="modal-btn btn-reject" id="closeSettingsBtn">
+            <span>Close</span>
+          </button>
+          <button class="modal-btn btn-approve" id="saveSettingsBtn">
+            <span>Apply Settings</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/visualizer.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

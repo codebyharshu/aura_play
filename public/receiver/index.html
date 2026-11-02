@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' ws: wss: http: https:; img-src 'self' data:;">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SyncWave Receiver</title>
+  <link rel="stylesheet" href="css/receiver.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="receiver-container">
+    <!-- Header -->
+    <header class="receiver-header">
+      <div class="brand-group">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M2 10v4"/><path d="M6 7v10"/><path d="M10 3v18"/><path d="M14 6v12"/><path d="M18 9v6"/><path d="M22 11v2"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>SyncWave</h1>
+          <span class="sub-badge">AUDIO RECEIVER</span>
+        </div>
+      </div>
+      <div class="conn-pill" id="connPill">
+        <span class="pill-dot"></span>
+        <span class="pill-text" id="connPillText">Connecting</span>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="receiver-main">
+      <!-- Step 1: Initial Audio Unlock Screen -->
+      <section class="state-card" id="unlockScreen">
+        <div class="icon-bubble pulse-cyan">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+          </svg>
+        </div>
+        <h2>Join Audio Broadcast</h2>
+        <p class="desc">Tap below to activate your browser's audio engine and synchronize playback with the host computer.</p>
+        <button class="primary-btn" id="joinStreamBtn">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+          <span>Connect & Start Audio</span>
+        </button>
+      </section>
+
+      <!-- Step 2: Waiting for Desktop Host Approval Screen -->
+      <section class="state-card hidden" id="waitingApprovalScreen">
+        <div class="icon-bubble pulse-amber">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <h2>Awaiting Approval</h2>
+        <p class="desc">A connection request has been sent to the host PC.</p>
+        <div class="approval-wait-box">
+          <div class="spinner"></div>
+          <span>Please click <strong>"Approve"</strong> on your computer screen.</span>
+        </div>
+      </section>
+
+      <!-- Step 3: Active Synchronized Streaming Screen -->
+      <section class="state-card hidden" id="activeStreamScreen">
+        <div class="stream-visualizer">
+          <div class="sound-wave">
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+        </div>
+
+        <div class="stream-info">
+          <h2 class="stream-title">Synchronized Playback Active</h2>
+          <div class="sync-metrics">
+            <div class="metric">
+              <span class="m-label">Latency:</span>
+              <span class="m-val" id="clientLatencyVal">-- ms</span>
+            </div>
+            <div class="metric">
+              <span class="m-label">Clock Offset:</span>
+              <span class="m-val" id="clientOffsetVal">-- ms</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Volume Control Slider -->
+        <div class="volume-box">
+          <div class="vol-label-row">
+            <span>Speaker Volume</span>
+            <span id="receiverVolText" class="vol-pct">100%</span>
+          </div>
+          <input type="range" class="vol-range" id="receiverVolSlider" min="0" max="100" value="100">
+        </div>
+
+        <button class="btn-disconnect" id="receiverDisconnectBtn">Disconnect from Stream</button>
+      </section>
+
+      <!-- Step 4: Reconnecting / Disconnected Screen -->
+      <section class="state-card hidden" id="disconnectedScreen">
+        <div class="icon-bubble pulse-red">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="1" y1="1" x2="23" y2="23"/>
+            <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/>
+            <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/>
+            <path d="M10.71 5.05A16 16 0 0 1 22.58 9"/>
+            <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/>
+            <line x1="12" y1="20" x2="12.01" y2="20"/>
+          </svg>
+        </div>
+        <h2 id="disconnectReasonTitle">Disconnected</h2>
+        <p class="desc" id="disconnectReasonDesc">Connection to the SyncWave host was lost.</p>
+        <button class="primary-btn" id="reconnectBtn">
+          <span>Reconnect</span>
+        </button>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="receiver-footer">
+      <span>SyncWave Local Multi-Device Audio</span>
+    </footer>
+  </div>
+
+  <script src="js/audioSync.js"></script>
+  <script src="js/receiver.js"></script>
+</body>
+</html>

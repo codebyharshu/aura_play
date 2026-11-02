@@ -1,0 +1,68 @@
+{
+  "name": "syncwave",
+  "version": "1.0.0",
+  "description": "Multi-Device Real-Time Audio Synchronization Desktop Application",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node tests/test-final-suite.js",
+    "pack": "electron-builder --win --dir",
+    "dist": "electron-builder --win portable"
+  },
+  "build": {
+    "appId": "com.syncwave.desktop",
+    "productName": "SyncWave",
+    "copyright": "Copyright © 2026 SyncWave Team",
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": [
+        "dir",
+        "portable"
+      ]
+    },
+    "asarUnpack": [
+      "src/audio/native/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "src/audio/native",
+        "to": "src/audio/native",
+        "filter": [
+          "*.dll",
+          "*.exe"
+        ]
+      },
+      {
+        "from": "public/receiver",
+        "to": "public/receiver"
+      }
+    ],
+    "files": [
+      "src/**/*",
+      "public/**/*",
+      "package.json"
+    ]
+  },
+  "keywords": [
+    "audio",
+    "streaming",
+    "synchronization",
+    "wasapi",
+    "electron",
+    "webrtc",
+    "websocket"
+  ],
+  "author": "SyncWave Team",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.2",
+    "qrcode": "^1.5.4",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^26.18.0"
+  }
+}
